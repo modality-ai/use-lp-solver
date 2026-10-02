@@ -26,8 +26,8 @@ class Heap<T> {
   private _bubbleUp(index: number): void {
     while (index > 0) {
       const parentIdx = Math.floor((index - 1) / 2)
-      if (this.comparator(this.items[index], this.items[parentIdx]) >= 0) break
-      ;[this.items[index], this.items[parentIdx]] = [this.items[parentIdx], this.items[index]]
+      if (this.comparator(this.items[index]!, this.items[parentIdx]!) >= 0) break
+      ;[this.items[index], this.items[parentIdx]] = [this.items[parentIdx]!, this.items[index]!]
       index = parentIdx
     }
   }
@@ -38,15 +38,15 @@ class Heap<T> {
       const leftIdx = 2 * index + 1
       const rightIdx = 2 * index + 2
 
-      if (leftIdx < this.items.length && this.comparator(this.items[leftIdx], this.items[smallest]) < 0) {
+      if (leftIdx < this.items.length && this.comparator(this.items[leftIdx]!, this.items[smallest]!) < 0) {
         smallest = leftIdx
       }
-      if (rightIdx < this.items.length && this.comparator(this.items[rightIdx], this.items[smallest]) < 0) {
+      if (rightIdx < this.items.length && this.comparator(this.items[rightIdx]!, this.items[smallest]!) < 0) {
         smallest = rightIdx
       }
       if (smallest === index) break
 
-      ;[this.items[index], this.items[smallest]] = [this.items[smallest], this.items[index]]
+      ;[this.items[index], this.items[smallest]] = [this.items[smallest]!, this.items[index]!]
       index = smallest
     }
   }
@@ -125,7 +125,7 @@ export const branchAndCut = (
       let maxFractional = 0
 
       for (const varIdx of integers) {
-        const pos = childTableau.positionOfVariable[varIdx]
+        const pos = childTableau.positionOfVariable[varIdx]!
         const varValue = index(childTableau, Math.floor(pos / childTableau.width), pos % childTableau.width)
         if (!isInteger(varValue, precision)) {
           isIntegerFeasible = false
@@ -146,7 +146,7 @@ export const branchAndCut = (
       } else if (!isNaN(bestValue) && value <= bestValue) {
         continue
       } else if (mostFractionalVar >= 0) {
-        const pos = childTableau.positionOfVariable[mostFractionalVar]
+        const pos = childTableau.positionOfVariable[mostFractionalVar]!
         const varValue = index(childTableau, Math.floor(pos / childTableau.width), pos % childTableau.width)
         const floorVal = Math.floor(varValue)
         const ceilVal = Math.ceil(varValue)

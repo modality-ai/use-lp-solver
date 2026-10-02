@@ -6,8 +6,8 @@ const MACHINE_EPSILON = 1e-16
 
 const pivot = (tableau: Tableau, row: number, col: number): void => {
   const quotient = index(tableau, row, col)
-  const leaving = tableau.variableAtPosition[tableau.width + row]
-  const entering = tableau.variableAtPosition[col]
+  const leaving = tableau.variableAtPosition[tableau.width + row]!
+  const entering = tableau.variableAtPosition[col]!
   tableau.variableAtPosition[tableau.width + row] = entering
   tableau.variableAtPosition[col] = leaving
   tableau.positionOfVariable[leaving] = col
@@ -31,7 +31,7 @@ const pivot = (tableau: Tableau, row: number, col: number): void => {
     const coef = index(tableau, r, col)
     if (Math.abs(coef) > MACHINE_EPSILON) {
       for (let i = 0; i < nonZeroColumns.length; i++) {
-        const c = nonZeroColumns[i]
+        const c = nonZeroColumns[i]!
         update(tableau, r, c, index(tableau, r, c) - coef * index(tableau, row, c))
       }
       update(tableau, r, col, -coef / quotient)
@@ -40,14 +40,14 @@ const pivot = (tableau: Tableau, row: number, col: number): void => {
 }
 
 const hasCycle = (history: Array<[number, number]>, tableau: Tableau, row: number, col: number): boolean => {
-  history.push([tableau.variableAtPosition[tableau.width + row], tableau.variableAtPosition[col]])
+  history.push([tableau.variableAtPosition[tableau.width + row]!, tableau.variableAtPosition[col]!])
 
   for (let length = 6; length <= Math.trunc(history.length / 2); length++) {
     let cycle = true
     for (let i = 0; i < length; i++) {
       const item = history.length - 1 - i
-      const [row1, col1] = history[item]
-      const [row2, col2] = history[item - length]
+      const [row1, col1] = history[item]!
+      const [row2, col2] = history[item - length]!
       if (row1 !== row2 || col1 !== col2) {
         cycle = false
         break

@@ -44,7 +44,7 @@ export const solve = <VarKey extends string = string, ConKey extends string = st
 
   if (status === 'optimal' && isFinite(objectiveValue)) {
     for (let i = 0; i < tableau.numVariables; i++) {
-      const pos = resultTableau.positionOfVariable[i]
+      const pos = resultTableau.positionOfVariable[i]!
 
       let varValue = 0
 
@@ -56,7 +56,7 @@ export const solve = <VarKey extends string = string, ConKey extends string = st
         // pos >= width means it's the (pos - width)th constraint row
         const rowIdx = pos - resultTableau.width
         if (rowIdx < resultTableau.height) {
-          varValue = resultTableau.matrix[rowIdx * resultTableau.width]
+          varValue = resultTableau.matrix[rowIdx * resultTableau.width]!
         }
       }
 

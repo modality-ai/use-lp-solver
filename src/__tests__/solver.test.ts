@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test'
-import { solve, lessEq, greaterEq, equalTo, inRange } from '../solver'
+import { solve, lessEq, greaterEq, equalTo, inRange } from '../lib/solver'
 
 describe('Linear Programming Solver', () => {
   it('should solve a simple maximization problem', () => {

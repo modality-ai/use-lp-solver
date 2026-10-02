@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { CLICommand } from "modality-cli-kit";
-import { solve as solveModel } from "../../solver";
-import type { Model } from "../../types";
+import { solve as solveModel } from "../../lib/solver";
+import type { Model } from "../../lib/types";
 
 const SolveArgsSchema = z.object({
   file: z.string().describe("Path to a JSON file containing the LP model"),

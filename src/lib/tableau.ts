@@ -1,7 +1,7 @@
 import type { Model, Tableau } from './types'
 
 export const index = (tableau: Tableau, row: number, col: number): number => {
-  return tableau.matrix[Math.imul(row, tableau.width) + col]
+  return tableau.matrix[Math.imul(row, tableau.width) + col]!
 }
 
 export const update = (tableau: Tableau, row: number, col: number, value: number): void => {
@@ -63,7 +63,7 @@ export const tableauModel = (model: Model): {
 
   const direction = model.direction === 'minimize' ? -1 : 1
   for (let i = 0; i < numVariables; i++) {
-    const varKey = variableKeys[i]
+    const varKey = variableKeys[i]!
     const coef = objectiveCoefficients[varKey] || 0
     update(tempTableau, 0, i + 1, -direction * coef)
   }
@@ -75,7 +75,7 @@ export const tableauModel = (model: Model): {
     update(tempTableau, rowIndex, 1 + numVariables + constraintIndex, 1)
 
     for (let i = 0; i < numVariables; i++) {
-      const varKey = variableKeys[i]
+      const varKey = variableKeys[i]!
       const variable = (model.variables as Record<string, Record<string, number>>)[varKey] || {}
       const coef = variable[constraintKey] || 0
       update(tempTableau, rowIndex, i + 1, coef)
