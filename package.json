@@ -15,7 +15,7 @@
   "license": "ISC",
   "git.addAICoAuthor": "off",
   "dependencies": {
-    "@modality-counter/core": "^2.5.0",
+    "@modality-counter/core": "^2.5.3",
     "modality-cli-kit": "*",
     "modality-mcp-kit": "*",
     "zod": "*"
