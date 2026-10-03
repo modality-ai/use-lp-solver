@@ -1,0 +1,83 @@
+---
+name: "*use-lp-solver"
+description: Build a JSON linear/mixed-integer program model at runtime and solve it with the use-lp-solver CLI via stdin or a file path.
+---
+
+```yaml
+method:
+  name: "*use-lp-solver"
+  icon: 📐
+  category: optimization
+  introduce: Turn an optimization problem (maximize profit, minimize cost, with limits) into a JSON model at runtime, pipe it to use-lp-solver solve, and report the optimal result.
+  usage:
+    method: "*use-lp-solver [problem]"
+    parameters:
+      problem:
+        description: Natural-language optimization problem to convert into a JSON model and solve.
+        type: string
+        required: false
+    examples:
+      - "*use-lp-solver maximize profit 5a+4b with budget 2a+3b<=10, whole numbers → build model JSON and solve"
+      - "*use-lp-solver minimize diet cost with protein>=4 and calories>=3 → build model JSON and solve"
+  agent_compatibility:
+    - "✅ JAMES (Full Stack Developer) - Model construction and CLI orchestration"
+    - "✅ PEPPER (Chief Financial Expert) - Budget allocation and cost minimization problems"
+    - "✅ FRIDAY (Strategic Intelligence Analyst) - Decision framing as constrained optimization"
+
+methodology:
+  purpose: >-
+    Convert an optimization problem into a JSON model at runtime, solve it with the
+    use-lp-solver CLI, and report status, objective value, and variable values.
+  expected_output:
+    - The JSON model that was built, in a json-fenced code block
+    - The solver output (status, result keyed by objective name, variables)
+    - A plain-language interpretation of the answer, after checking status is optimal
+
+integration_protocols:
+  run:
+    stdin: "echo '<model json>' | use-lp-solver solve"
+    file: "use-lp-solver solve model.json"
+    alias: "s"
+    options: "--precision <n> (default 1e-8), --include-zero-variables"
+  model_shape:
+    direction: "maximize or minimize (default maximize)"
+    objective: "Name of the coefficient key to optimize; each variable carries a value under this key"
+    constraints: "Map of constraint name to { max: n } | { min: n } | { equal: n } | { min: a, max: b }"
+    variables: "Map of variable name to coefficients keyed by constraint name and the objective key; omitted means 0"
+    integers: "true (all variables) or array of variable names that must be whole numbers"
+    binaries: "true or array of variable names limited to 0 or 1"
+    notes: "All variables are implicitly >= 0."
+  build_steps:
+    - "List the decisions: each becomes a key in variables."
+    - "List the limits (budget, capacity, demand): each becomes a key in constraints with max, min or equal."
+    - "For each variable, set its coefficient for every constraint it uses."
+    - "Put each variable's goal value under the objective key and set direction."
+    - "Mark whole-number decisions with integers and yes/no decisions with binaries."
+  example_maximize:
+    direction: maximize
+    objective: profit
+    constraints:
+      budget: { max: 10 }
+    variables:
+      itemA: { profit: 5, budget: 2 }
+      itemB: { profit: 4, budget: 3 }
+    integers: true
+  example_minimize:
+    direction: minimize
+    objective: cost
+    constraints:
+      protein: { min: 4 }
+      calories: { min: 3 }
+    variables:
+      foodA: { cost: 2, protein: 1, calories: 1 }
+      foodB: { cost: 3, protein: 2, calories: 1 }
+  output_shape:
+    status: "optimal | infeasible | unbounded | timedout | cycled; check before reading result"
+    result: "Objective value keyed by the objective name, e.g. { profit: 25 }; null when no solution"
+    variables: "[name, value] pairs; zero values hidden unless --include-zero-variables"
+
+tactical_notes:
+  mission_critical:
+    - "Check status is optimal before reading result"
+    - "Pipe the JSON model via stdin or pass a file path to use-lp-solver solve"
+```

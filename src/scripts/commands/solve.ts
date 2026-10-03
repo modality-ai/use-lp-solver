@@ -4,8 +4,8 @@ import { solve as solveModel } from "../../lib/solver";
 import type { Model } from "../../lib/types";
 
 const SolveArgsSchema = z.object({
-  file: z.string().optional().describe("Path to a JSON model file, or '-' / omitted to read from stdin"),
-  precision: z.number().optional().describe("Rounding precision (default 1e-8)"),
+  file: z.string().optional().describe("Path to a JSON model file; omit to read from stdin"),
+  precision: z.coerce.number().optional().describe("Rounding precision (default 1e-8)"),
   includeZeroVariables: z.boolean().optional().describe("Include variables whose value is zero"),
 });
 
