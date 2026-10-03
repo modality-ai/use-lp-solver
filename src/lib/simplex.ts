@@ -105,16 +105,6 @@ export const phase1 = (tableau: Tableau, options: Required<Options>): [SolutionS
   const pivotHistory: Array<[number, number]> = []
   const { precision, maxPivots, checkCycles } = options
 
-  // Fix negative RHS by negating entire constraint rows (for >= constraints converted to <=)
-  for (let r = 1; r < tableau.height; r++) {
-    const rhs = index(tableau, r, 0)
-    if (rhs < -precision) {
-      for (let c = 0; c < tableau.width; c++) {
-        update(tableau, r, c, -index(tableau, r, c))
-      }
-    }
-  }
-
   for (let iter = 0; iter < maxPivots; iter++) {
     let row = 0
     let rhs = -precision
@@ -129,12 +119,12 @@ export const phase1 = (tableau: Tableau, options: Required<Options>): [SolutionS
     if (row === 0) return phase2(tableau, options)
 
     let col = 0
-    let maxRatio = -Infinity
+    let maxRatio = Infinity
     for (let c = 1; c < tableau.width; c++) {
       const coefficient = index(tableau, row, c)
       if (coefficient < -precision) {
         const ratio = -index(tableau, 0, c) / coefficient
-        if (ratio > maxRatio) {
+        if (ratio < maxRatio) {
           maxRatio = ratio
           col = c
         }

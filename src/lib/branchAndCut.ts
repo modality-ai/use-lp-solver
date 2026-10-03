@@ -1,162 +1,87 @@
-import type { Options, Tableau, SolutionStatus } from './types'
-import { index, update } from './tableau'
-import { phase1 } from './simplex'
+import type { Model, Options, SolutionStatus } from './types'
+import { relax } from './relaxation'
 import { isInteger } from './util'
 
-class Heap<T> {
-  private items: T[] = []
+type Bound = { key: string; kind: 'max' | 'min'; value: number }
 
-  constructor(private comparator: (a: T, b: T) => number) {}
-
-  push(item: T): void {
-    this.items.push(item)
-    this._bubbleUp(this.items.length - 1)
-  }
-
-  pop(): T | undefined {
-    if (this.items.length === 0) return undefined
-    if (this.items.length === 1) return this.items.pop()
-
-    const root = this.items[0]
-    this.items[0] = this.items.pop()!
-    this._bubbleDown(0)
-    return root
-  }
-
-  private _bubbleUp(index: number): void {
-    while (index > 0) {
-      const parentIdx = Math.floor((index - 1) / 2)
-      if (this.comparator(this.items[index]!, this.items[parentIdx]!) >= 0) break
-      ;[this.items[index], this.items[parentIdx]] = [this.items[parentIdx]!, this.items[index]!]
-      index = parentIdx
-    }
-  }
-
-  private _bubbleDown(index: number): void {
-    while (true) {
-      let smallest = index
-      const leftIdx = 2 * index + 1
-      const rightIdx = 2 * index + 2
-
-      if (leftIdx < this.items.length && this.comparator(this.items[leftIdx]!, this.items[smallest]!) < 0) {
-        smallest = leftIdx
-      }
-      if (rightIdx < this.items.length && this.comparator(this.items[rightIdx]!, this.items[smallest]!) < 0) {
-        smallest = rightIdx
-      }
-      if (smallest === index) break
-
-      ;[this.items[index], this.items[smallest]] = [this.items[smallest]!, this.items[index]!]
-      index = smallest
-    }
-  }
-
-  isEmpty(): boolean {
-    return this.items.length === 0
-  }
+export type IntegerResult = {
+  status: SolutionStatus
+  value: number
+  keys: string[]
+  values: number[]
 }
 
+/** Add one branching bound as an extra single-variable constraint. */
+const withBounds = (model: Model, bounds: Bound[]): Model => {
+  const constraints: Record<string, object> = { ...(model.constraints as Record<string, object>) }
+  const variables: Record<string, Record<string, number>> = {}
+  for (const [key, coefficients] of Object.entries(model.variables as Record<string, Record<string, number>>)) {
+    variables[key] = { ...coefficients }
+  }
+  bounds.forEach((bound, i) => {
+    const name = `__bound${i}`
+    constraints[name] = { [bound.kind]: bound.value }
+    variables[bound.key] = { ...variables[bound.key], [name]: 1 }
+  })
+  return { ...model, constraints, variables } as Model
+}
+
+/**
+ * Depth-first branch and bound. Every node is a fresh LP relaxation of the model plus
+ * the branching bounds; the most fractional integer variable is split into floor/ceil.
+ */
 export const branchAndCut = (
-  tableau: Tableau,
+  model: Model,
   options: Required<Options>,
-  integerVariables: Set<number>,
-  binaryVariables: Set<number>,
-): [Tableau, SolutionStatus, number] => {
+  integerKeys: Set<string>,
+  binaryKeys: Set<string>,
+): IntegerResult => {
   const { timeout, maxIterations, tolerance, precision } = options
   const stopTime = Date.now() + timeout
-  const integers = new Set([...integerVariables, ...binaryVariables])
+  const integers = new Set([...integerKeys, ...binaryKeys])
 
-  const [initStatus, initValue] = phase1(tableau, options)
-  if (initStatus !== 'optimal') {
-    return [tableau, initStatus, NaN]
-  }
+  const rootBounds: Bound[] = [...binaryKeys].map((key) => ({ key, kind: 'max', value: 1 }))
+  const stack: Bound[][] = [rootBounds]
 
-  let bestValue = NaN
-  let bestSolution: Tableau | null = null
-  let bestTableau: Tableau | null = null
-  const branches = new Heap<[number, Array<[number, number, number]>]>((a, b) => a[0] - b[0])
-
-  branches.push([initValue, []])
-
+  let best: IntegerResult | null = null
   let iterations = 0
+  let rootStatus: SolutionStatus = 'infeasible'
 
-  while (!branches.isEmpty() && iterations < maxIterations) {
-    iterations++
-
-    if (Date.now() >= stopTime) {
-      return [bestTableau || tableau, 'timedout', bestValue]
+  while (stack.length > 0) {
+    if (iterations++ >= maxIterations || Date.now() >= stopTime) {
+      return best ?? { status: 'timedout', value: NaN, keys: [], values: [] }
     }
 
-    const [relaxedBound, cuts] = branches.pop()!
+    const bounds = stack.pop()!
+    const node = relax(withBounds(model, bounds), options)
 
-    if (!isNaN(bestValue) && relaxedBound <= bestValue * (1 - tolerance)) {
+    if (iterations === 1) rootStatus = node.status
+    if (node.status !== 'optimal') continue
+    if (best && node.value <= best.value * (1 - tolerance) + precision) continue
+
+    let branchIndex = -1
+    let maxFraction = 0
+    node.values.forEach((value, i) => {
+      if (!integers.has(node.keys[i]!) || isInteger(value, precision)) return
+      const fraction = Math.abs(value - Math.round(value))
+      if (fraction > maxFraction) {
+        maxFraction = fraction
+        branchIndex = i
+      }
+    })
+
+    if (branchIndex < 0) {
+      best = { status: 'optimal', value: node.value, keys: node.keys, values: node.values }
       continue
     }
 
-    const childTableau = JSON.parse(JSON.stringify({
-      matrix: Array.from(tableau.matrix),
-      width: tableau.width,
-      height: tableau.height,
-      positionOfVariable: Array.from(tableau.positionOfVariable),
-      variableAtPosition: Array.from(tableau.variableAtPosition),
-      variableKeys: tableau.variableKeys,
-      numVariables: tableau.numVariables,
-    })) as Tableau
-    childTableau.matrix = new Float64Array(childTableau.matrix as any)
-    childTableau.positionOfVariable = new Int32Array(childTableau.positionOfVariable as any)
-    childTableau.variableAtPosition = new Int32Array(childTableau.variableAtPosition as any)
-
-    for (const [sign, variable, value] of cuts) {
-      const position = childTableau.positionOfVariable[variable]
-      for (let c = 0; c < childTableau.width; c++) {
-        const idx = Math.imul(childTableau.height, childTableau.width) + c
-        if (c === 0) childTableau.matrix[idx] = value
-        else if (c === position) childTableau.matrix[idx] = sign
-        else childTableau.matrix[idx] = 0
-      }
-      childTableau.height++
-    }
-
-    const [status, value] = phase1(childTableau, options)
-
-    if (status === 'optimal') {
-      let isIntegerFeasible = true
-      let mostFractionalVar = -1
-      let maxFractional = 0
-
-      for (const varIdx of integers) {
-        const pos = childTableau.positionOfVariable[varIdx]!
-        const varValue = index(childTableau, Math.floor(pos / childTableau.width), pos % childTableau.width)
-        if (!isInteger(varValue, precision)) {
-          isIntegerFeasible = false
-          const frac = Math.abs(varValue - Math.round(varValue))
-          if (frac > maxFractional) {
-            maxFractional = frac
-            mostFractionalVar = varIdx
-          }
-        }
-      }
-
-      if (isIntegerFeasible) {
-        if (isNaN(bestValue) || value > bestValue) {
-          bestValue = value
-          bestSolution = childTableau
-          bestTableau = childTableau
-        }
-      } else if (!isNaN(bestValue) && value <= bestValue) {
-        continue
-      } else if (mostFractionalVar >= 0) {
-        const pos = childTableau.positionOfVariable[mostFractionalVar]!
-        const varValue = index(childTableau, Math.floor(pos / childTableau.width), pos % childTableau.width)
-        const floorVal = Math.floor(varValue)
-        const ceilVal = Math.ceil(varValue)
-
-        branches.push([value, [...cuts, [1, mostFractionalVar, floorVal]]])
-        branches.push([value, [...cuts, [-1, mostFractionalVar, -ceilVal]]])
-      }
-    }
+    const key = node.keys[branchIndex]!
+    const value = node.values[branchIndex]!
+    stack.push([...bounds, { key, kind: 'min', value: Math.ceil(value) }])
+    stack.push([...bounds, { key, kind: 'max', value: Math.floor(value) }])
   }
 
-  const finalStatus: SolutionStatus = isNaN(bestValue) ? 'infeasible' : iterations >= maxIterations ? 'timedout' : 'optimal'
-  return [bestTableau || tableau, finalStatus, bestValue]
+  if (best) return best
+  const status = rootStatus === 'optimal' ? 'infeasible' : rootStatus
+  return { status, value: NaN, keys: [], values: [] }
 }

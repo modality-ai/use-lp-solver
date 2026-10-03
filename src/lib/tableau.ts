@@ -32,13 +32,12 @@ export const tableauModel = (model: Model): {
 
   const numConstraints = constraintKeys.size
   const numVariables = variableKeys.length
-  const numSlackVariables = numConstraints
-  const width = 1 + numVariables + numSlackVariables
+  const width = 1 + numVariables
   const height = 1 + numConstraints
 
   const matrix = new Float64Array(width * height)
   const positionOfVariable = new Int32Array(numVariables + numConstraints)
-  const variableAtPosition = new Int32Array(width + numConstraints)
+  const variableAtPosition = new Int32Array(width + numConstraints + 1)
 
   const tempTableau: Tableau = { matrix, width, height, positionOfVariable, variableAtPosition, variableKeys: [], numVariables }
 
@@ -48,8 +47,8 @@ export const tableauModel = (model: Model): {
   }
 
   for (let i = 0; i < numConstraints; i++) {
-    positionOfVariable[numVariables + i] = width + i
-    variableAtPosition[width + i] = numVariables + i
+    positionOfVariable[numVariables + i] = width + i + 1
+    variableAtPosition[width + i + 1] = numVariables + i
   }
 
   const objectiveKey = model.objective
@@ -70,9 +69,9 @@ export const tableauModel = (model: Model): {
 
   let constraintIndex = 0
   for (const [constraintKey, constraint] of Object.entries(model.constraints || {})) {
+    if (!constraintKeys.has(constraintKey)) continue
     const rowIndex = constraintIndex + 1
 
-    update(tempTableau, rowIndex, 1 + numVariables + constraintIndex, 1)
 
     for (let i = 0; i < numVariables; i++) {
       const varKey = variableKeys[i]!
@@ -84,8 +83,8 @@ export const tableauModel = (model: Model): {
     if ((constraint as any).equal !== undefined) {
       update(tempTableau, rowIndex, 0, (constraint as any).equal)
     } else {
-      const min = (constraint as any).min || -Infinity
-      const max = (constraint as any).max || Infinity
+      const min = (constraint as any).min ?? -Infinity
+      const max = (constraint as any).max ?? Infinity
       if (isFinite(max)) {
         // <= constraint: use as-is
         update(tempTableau, rowIndex, 0, max)

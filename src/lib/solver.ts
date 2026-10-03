@@ -19,6 +19,7 @@ export const solve = <VarKey extends string = string, ConKey extends string = st
   options: Partial<Options> = {},
 ): Solution<VarKey> => {
   const finalOptions = { ...defaultOptions, ...options }
+  const sign = model.direction === 'minimize' ? -1 : 1
 
   const { tableau, integerVariables, binaryVariables } = tableauModel(model)
 
@@ -33,7 +34,24 @@ export const solve = <VarKey extends string = string, ConKey extends string = st
     objectiveValue = NaN
     resultTableau = tableau
   } else if (integerVariables.size > 0 || binaryVariables.size > 0) {
-    ;[resultTableau, status, objectiveValue] = branchAndCut(tableau, finalOptions, integerVariables, binaryVariables)
+    const keysOf = (indexes: Set<number>) => new Set([...indexes].map((i) => tableau.variableKeys[i]!))
+    const integerResult = branchAndCut(model as Model, finalOptions, keysOf(integerVariables), keysOf(binaryVariables))
+    const found: [VarKey, number][] = []
+    if (integerResult.status === 'optimal') {
+      integerResult.keys.forEach((key, i) => {
+        const value = integerResult.values[i]!
+        if (finalOptions.includeZeroVariables || Math.abs(value) > finalOptions.precision) {
+          found.push([key as VarKey, roundToPrecision(value, finalOptions.precision)])
+        }
+      })
+    }
+    return {
+      status: integerResult.status,
+      result: isFinite(integerResult.value)
+        ? roundToPrecision(sign * integerResult.value, finalOptions.precision)
+        : integerResult.value,
+      variables: found,
+    }
   } else {
     status = lpStatus
     objectiveValue = lpValue
@@ -68,7 +86,7 @@ export const solve = <VarKey extends string = string, ConKey extends string = st
 
   return {
     status,
-    result: isFinite(objectiveValue) ? roundToPrecision(objectiveValue, finalOptions.precision) : objectiveValue,
+    result: isFinite(objectiveValue) ? roundToPrecision(sign * objectiveValue, finalOptions.precision) : objectiveValue,
     variables,
   }
 }
