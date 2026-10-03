@@ -39,7 +39,7 @@ const solution = solve(model)
 
 console.log('=== Integer Programming (Knapsack) ===\n')
 console.log(`Status: ${solution.status}`)
-console.log(`Maximum Profit: ${solution.result}`)
+console.log(`Maximum Profit: ${solution.result.profit}`)
 console.log('\nOptimal Purchase:')
 solution.variables.forEach(([item, quantity]) => {
   console.log(`  ${item}: ${quantity} units`)

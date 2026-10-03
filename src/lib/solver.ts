@@ -20,6 +20,10 @@ export const solve = <VarKey extends string = string, ConKey extends string = st
 ): Solution<VarKey> => {
   const finalOptions = { ...defaultOptions, ...options }
   const sign = model.direction === 'minimize' ? -1 : 1
+  const objectiveKey = model.objective ?? 'objective'
+  const objectiveResult = (value: number): Record<string, number> => ({
+    [objectiveKey]: isFinite(value) ? roundToPrecision(sign * value, finalOptions.precision) : value,
+  })
 
   const { tableau, integerVariables, binaryVariables } = tableauModel(model)
 
@@ -47,9 +51,7 @@ export const solve = <VarKey extends string = string, ConKey extends string = st
     }
     return {
       status: integerResult.status,
-      result: isFinite(integerResult.value)
-        ? roundToPrecision(sign * integerResult.value, finalOptions.precision)
-        : integerResult.value,
+      result: objectiveResult(integerResult.value),
       variables: found,
     }
   } else {
@@ -86,7 +88,7 @@ export const solve = <VarKey extends string = string, ConKey extends string = st
 
   return {
     status,
-    result: isFinite(objectiveValue) ? roundToPrecision(sign * objectiveValue, finalOptions.precision) : objectiveValue,
+    result: objectiveResult(objectiveValue),
     variables,
   }
 }

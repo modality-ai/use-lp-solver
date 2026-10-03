@@ -23,7 +23,7 @@ export type SolutionStatus = 'optimal' | 'infeasible' | 'unbounded' | 'timedout'
 
 export type Solution<VariableKey = string> = {
   status: SolutionStatus
-  result: number
+  result: Record<string, number>
   variables: [VariableKey, number][]
 }
 

@@ -156,10 +156,20 @@ type Model = {
 ```typescript
 type Solution = {
   status: 'optimal' | 'infeasible' | 'unbounded' | 'timedout' | 'cycled'
-  result: number                        // Objective value
+  result: Record<string, number>        // Objective value keyed by the model objective name, e.g. { profit: 25 }
   variables: Array<[name: string, value: number]>  // Variable assignments
 }
 ```
+
+Read the objective value through its key — it is the model's `objective` name:
+
+```typescript
+solve({ objective: 'profit', /* ... */ }).result.profit
+```
+
+When the model omits `objective`, the key falls back to `objective`, so the
+value is `result.objective`. Note that the value is `NaN` whenever `status` is
+not `optimal` — check `status` before reading it.
 
 ---
 
@@ -203,7 +213,7 @@ const model = {
 const solution = solve(model)
 
 if (solution.status === 'optimal') {
-  console.log('Found optimal solution:', solution.result)
+  console.log('Found optimal solution:', solution.result.profit)
 } else if (solution.status === 'infeasible') {
   console.log('No feasible solution exists')
 } else if (solution.status === 'unbounded') {

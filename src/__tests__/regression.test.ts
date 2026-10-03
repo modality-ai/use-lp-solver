@@ -15,7 +15,7 @@ describe('minimization with >= constraints', () => {
       variables: { x: { cost: 2, need: 1 } },
     })
     expect(solution.status).toBe('optimal')
-    expect(solution.result).toBe(8)
+    expect(Object.values(solution.result)[0]).toBe(8)
   })
 
   it('returns the variable values that satisfy the >= constraint', () => {
@@ -38,7 +38,7 @@ describe('minimization with >= constraints', () => {
         foodB: { protein: 2, calories: 1, cost: 3 },
       },
     })
-    expect(solution.result).toBe(7)
+    expect(Object.values(solution.result)[0]).toBe(7)
   })
 
   it('picks the optimal diet quantities', () => {
@@ -73,7 +73,7 @@ describe('zero-valued bounds', () => {
       constraints: { cap: lessEq(0) },
       variables: { x: { profit: 1, cap: 1 } },
     })
-    expect(solution.result).toBe(0)
+    expect(Object.values(solution.result)[0]).toBe(0)
   })
 })
 
@@ -86,7 +86,7 @@ describe('integer programming', () => {
   } as unknown as Model
 
   it('finds the best whole-number knapsack profit', () => {
-    expect(solve({ ...knapsack, integers: true }).result).toBe(13)
+    expect(Object.values(solve({ ...knapsack, integers: true }).result)[0]).toBe(13)
   })
 
   it('returns whole-number quantities for the knapsack', () => {
@@ -94,7 +94,7 @@ describe('integer programming', () => {
   })
 
   it('keeps continuous variables fractional when only some are integers', () => {
-    expect(solve({ ...knapsack, integers: ['a'] } as unknown as Model).result).toBeCloseTo(13.3333, 3)
+    expect(Object.values(solve({ ...knapsack, integers: ['a'] } as unknown as Model).result)[0]).toBeCloseTo(13.3333, 3)
   })
 
   it('limits binary variables to 0 or 1', () => {
@@ -105,7 +105,7 @@ describe('integer programming', () => {
       variables: { a: { p: 5, b: 1 }, c: { p: 4, b: 1 } },
       binaries: true,
     } as unknown as Model
-    expect(solve(model).result).toBe(9)
+    expect(Object.values(solve(model).result)[0]).toBe(9)
   })
 
   it('reports infeasible when no whole number fits', () => {

@@ -55,7 +55,7 @@ console.log('║       Production Optimization Problem              ║')
 console.log('╚════════════════════════════════════════════════════╝\n')
 
 console.log(`Status: ${solution.status}`)
-console.log(`Maximum Profit: $${solution.result}\n`)
+console.log(`Maximum Profit: $${solution.result.profit}\n`)
 
 console.log('Production Plan:')
 console.log('─'.repeat(50))

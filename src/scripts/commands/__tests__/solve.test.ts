@@ -20,6 +20,6 @@ describe('solveCommand', () => {
       constraints: { c: { max: 4 } },
       variables: { x: { p: 3, c: 2 } },
     })
-    expect(result.result).toBe(6)
+    expect(Object.values(result.result)[0]).toBe(6)
   })
 })

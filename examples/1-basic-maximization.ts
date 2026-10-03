@@ -39,7 +39,7 @@ const solution = solve(model)
 
 console.log('=== Basic Maximization Problem ===\n')
 console.log(`Status: ${solution.status}`)
-console.log(`Maximum Profit: ${solution.result}`)
+console.log(`Maximum Profit: ${solution.result.profit}`)
 console.log('\nOptimal Solution:')
 solution.variables.forEach(([variable, value]) => {
   console.log(`  ${variable} = ${value}`)

@@ -19,7 +19,7 @@ describe('Linear Programming Solver', () => {
 
     const solution = solve(model)
     expect(solution.status).toBe('optimal')
-    expect(solution.result).toBeCloseTo(11, 0)
+    expect(Object.values(solution.result)[0]).toBeCloseTo(11, 0)
   })
 
   it('should solve a minimization problem', () => {
@@ -43,7 +43,7 @@ describe('Linear Programming Solver', () => {
     const solution = solve(model)
     expect(solution.status).toBe('optimal')
     // With unbounded feasible region, minimum is at origin (0,0) with cost 0
-    expect(solution.result).toBeCloseTo(0, 0)
+    expect(Object.values(solution.result)[0]).toBeCloseTo(0, 0)
   })
 
   it('should detect infeasible problems', () => {
@@ -101,7 +101,7 @@ describe('Linear Programming Solver', () => {
 
     const solution = solve(model)
     expect(solution.status).toBe('optimal')
-    expect(solution.result).toBeCloseTo(5, 0)
+    expect(Object.values(solution.result)[0]).toBeCloseTo(5, 0)
   })
 
   it('should handle range constraints', () => {
@@ -120,7 +120,7 @@ describe('Linear Programming Solver', () => {
 
     const solution = solve(model)
     expect(solution.status).toBe('optimal')
-    expect(solution.result).toBeCloseTo(5, 0)
+    expect(Object.values(solution.result)[0]).toBeCloseTo(5, 0)
   })
 
   it('should solve integer programming problems', () => {
@@ -141,7 +141,7 @@ describe('Linear Programming Solver', () => {
     // Integer programming with single variable and <= constraint
     // Should find x=5 with profit=15
     expect(solution.status).toBe('optimal')
-    expect(solution.result).toBeCloseTo(15, 0)
+    expect(Object.values(solution.result)[0]).toBeCloseTo(15, 0)
   })
 
   it('should handle binary variables', () => {
@@ -161,7 +161,7 @@ describe('Linear Programming Solver', () => {
 
     const solution = solve(model)
     expect(solution.status).toBe('optimal')
-    expect(solution.result).toBeCloseTo(2, 0)
+    expect(Object.values(solution.result)[0]).toBeCloseTo(2, 0)
   })
 
   it('should include zero variables when requested', () => {
@@ -200,7 +200,7 @@ describe('Linear Programming Solver', () => {
 
     const solution = solve(model, { precision: 1e-3 })
     expect(solution.status).toBe('optimal')
-    expect(solution.result).toBeCloseTo(1, 0)
+    expect(Object.values(solution.result)[0]).toBeCloseTo(1, 0)
   })
 
   it('should handle complex multi-variable problem', () => {
@@ -221,7 +221,7 @@ describe('Linear Programming Solver', () => {
 
     const solution = solve(model)
     expect(solution.status).toBe('optimal')
-    expect(solution.result).toBeGreaterThan(0)
+    expect(Object.values(solution.result)[0]).toBeGreaterThan(0)
     expect(Array.isArray(solution.variables)).toBe(true)
   })
 })

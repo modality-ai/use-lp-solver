@@ -41,7 +41,7 @@ const solution = solve(model)
 
 console.log('=== Diet Optimization (Minimization) ===\n')
 console.log(`Status: ${solution.status}`)
-console.log(`Minimum Cost: $${solution.result}`)
+console.log(`Minimum Cost: $${solution.result.cost}`)
 console.log('\nOptimal Diet:')
 solution.variables.forEach(([food, amount]) => {
   console.log(`  ${food}: ${amount} units`)
