@@ -77,9 +77,115 @@ type Model = {
 }
 ```
 
--   `variables`: each decision is a key, mapped to its coefficients per constraint plus its value under the `objective` key. Omitted coefficients are `0`.
--   `constraints`: each limit is a key with `{ max }`, `{ min }`, `{ equal }`, or `{ min, max }`.
--   All variables are implicitly `>= 0`.
+All variables are implicitly `>= 0`.
+
+### `direction`
+
+Optional. `'maximize'` (default) or `'minimize'`.
+
+```typescript
+{ direction: 'minimize' } // lowest cost wins
+```
+
+### `objective`
+
+Optional. The name of the coefficient key that each variable carries as its goal value. The solution reports the optimum under this same name. If omitted, the key is `objective`.
+
+```typescript
+{
+    objective: 'profit',
+    variables: { chair: { profit: 10 }, table: { profit: 20 } },
+}
+// solution.result.profit
+```
+
+### `constraints`
+
+Required. A map of limit name to bounds. Each bound is one of:
+
+| Form                 | Meaning           | Helper          |
+| -------------------- | ----------------- | --------------- |
+| `{ max: 10 }`        | value `<= 10`     | `lessEq(10)`    |
+| `{ min: 4 }`         | value `>= 4`      | `greaterEq(4)`  |
+| `{ equal: 7 }`       | value `= 7`       | `equalTo(7)`    |
+| `{ min: 2, max: 8 }` | `2 <= value <= 8` | `inRange(2, 8)` |
+
+```typescript
+{
+    constraints: {
+        labor: lessEq(40), // at most 40 hours
+        protein: greaterEq(4), // at least 4 units
+        total: equalTo(100), // exactly 100
+        temperature: inRange(20, 25), // between 20 and 25
+    },
+}
+```
+
+### `variables`
+
+Required. A map of decision name to its coefficients. Each coefficient key is either a constraint name (how much of that limit one unit of the variable uses) or the `objective` key (its goal value). Omitted coefficients are `0`.
+
+```typescript
+{
+    objective: 'profit',
+    constraints: { labor: lessEq(40), material: lessEq(30) },
+    variables: {
+        chair: { profit: 10, labor: 1, material: 1 }, // uses 1 labor, 1 material
+        table: { profit: 20, labor: 2, material: 2 },
+        desk: { profit: 18, labor: 1, material: 3 },
+    },
+}
+```
+
+### `integers`
+
+Optional. Forces variables to whole numbers. `true` applies to all variables. A `Set<string>` of names (an array in CLI JSON) applies to only those.
+
+```typescript
+{ integers: true } // every variable is whole
+{ integers: new Set(['chair', 'table']) } // only these
+```
+
+### `binaries`
+
+Optional. Limits item variables to 0 or 1, for yes/no decisions.
+
+```typescript
+{ binaries: true } // every variable is 0 or 1
+{ binaries: new Set(['openStore']) } // only this one
+```
+
+JSON examples for the CLI:
+
+-   [`examples/model-binaries.json`](./examples/model-binaries.json): pick each item or not (`binaries: true`).
+-   [`examples/model-min-one.json`](./examples/model-min-one.json): choose every item at least once (`integers: true` plus a `min: 1` constraint per item).
+
+```bash
+use-lp-solver solve examples/model-binaries.json
+use-lp-solver solve examples/model-min-one.json
+```
+
+### Full example with every parameter
+
+```typescript
+solve({
+    direction: 'maximize',
+    objective: 'profit',
+    constraints: {
+        budget: lessEq(100),
+        minUnits: greaterEq(2),
+    },
+    variables: {
+        widget: { profit: 8, budget: 10, minUnits: 1 },
+        gadget: { profit: 5, budget: 6, minUnits: 1 },
+        openStore: { profit: -20, budget: 30 },
+    },
+    integers: new Set(['widget', 'gadget']),
+    binaries: new Set(['openStore']),
+})
+```
+
+In CLI JSON, use arrays instead of sets: `"integers": ["widget", "gadget"]`.
 
 ### Constraint helpers
 

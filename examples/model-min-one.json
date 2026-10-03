@@ -1,0 +1,18 @@
+{
+  "direction": "maximize",
+  "objective": "value",
+  "constraints": {
+    "weight": { "max": 20 },
+    "minA": { "min": 1 },
+    "minB": { "min": 1 },
+    "minC": { "min": 1 },
+    "minD": { "min": 1 }
+  },
+  "variables": {
+    "itemA": { "value": 6, "weight": 5, "minA": 1 },
+    "itemB": { "value": 5, "weight": 4, "minB": 1 },
+    "itemC": { "value": 4, "weight": 3, "minC": 1 },
+    "itemD": { "value": 3, "weight": 2, "minD": 1 }
+  },
+  "integers": true
+}

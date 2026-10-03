@@ -1,0 +1,14 @@
+{
+  "direction": "maximize",
+  "objective": "value",
+  "constraints": {
+    "weight": { "max": 10 }
+  },
+  "variables": {
+    "itemA": { "value": 6, "weight": 5 },
+    "itemB": { "value": 5, "weight": 4 },
+    "itemC": { "value": 4, "weight": 3 },
+    "itemD": { "value": 3, "weight": 2 }
+  },
+  "binaries": true
+}
