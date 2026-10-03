@@ -1,0 +1,12 @@
+{
+  "direction": "maximize",
+  "objective": "profit",
+  "constraints": {
+    "budget": { "max": 10 }
+  },
+  "variables": {
+    "itemA": { "profit": 5, "budget": 2 },
+    "itemB": { "profit": 4, "budget": 3 }
+  },
+  "integers": true
+}
