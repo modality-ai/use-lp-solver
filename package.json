@@ -15,13 +15,13 @@
   "license": "ISC",
   "git.addAICoAuthor": "off",
   "dependencies": {
-    "@modality-counter/core": "^2.5.3",
-    "modality-cli-kit": "*",
-    "modality-mcp-kit": "*",
-    "zod": "*"
+    "@modality-counter/core": "^2.9.3",
+    "modality-cli-kit": "^0.17.2",
+    "modality-mcp-kit": "^2.1.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "modality-bun-kit": "*"
+    "modality-bun-kit": "^1.4.4"
   },
   "exports": {
     "types": "./types/index.d.ts",

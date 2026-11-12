@@ -31,7 +31,7 @@ export const aiTool: AITool = {
       return getHelp({
         cliName: CLI_NAME,
         tagline: TAGLINE,
-        commands: registry.all,
+        registry,
       });
     }
 
